@@ -1,0 +1,130 @@
+var mul_cache = {};
+//Варианты получения данного числа умножением
+var mul = function(num){
+  if (mul_cache[num]) return mul_cache[num];
+  
+  var max = Math.sqrt(num);
+  var res = [];
+  for ( var i = num-1; i>=max; i--){
+    if ( num%i == 0 ) res.push( { max: i, min: num/i } );
+  }
+  
+  return mul_cache[num] = res;
+}
+
+var sum_cache = {};
+//Варианты получения данного числа сложением
+var sum = function(num){
+  if (sum_cache[num]) return sum_cache[num];
+  
+  var max = ~~(num/2);
+  var res = [];
+  for ( var i = num-2; i>max; i--){
+    res.push( { max: i, min: num-i } );
+  }
+  
+  return sum_cache[num] = res;
+}
+
+
+var first_cache = {}
+//Удовлетворение 1 условию
+var first = function(num){
+  if (first_cache[num]) return first_cache[num];
+  
+  var res;
+  if ( mul(num).length > 1 ) res = true;
+  
+  return first_cache[num] = res;
+}
+
+
+var second_cache = {}
+//Удовлетворение 2 условию
+var second = function(num){
+  if (second_cache[num]) return second_cache[num];
+  
+  var res = true;
+  sum(num).forEach(function(pair){
+    if ( !first( pair.max*pair.min ) ) res = false;
+  });
+  
+  return second_cache[num] = res;
+}
+
+
+var three_cache = {}
+//Удовлетворение 3 условию
+var three = function(num){
+  if (three_cache[num]) return three_cache[num];
+  
+  var res = false;
+  var last = [];
+  if ( first(num) ){
+    res = 0;
+    
+    mul(num).forEach(
+      function(pair){
+        if ( second( pair.max+pair.min ) ){
+          res++;
+          last.push( pair );
+        }
+      }
+    );
+    
+    if ( res != 1 ){
+      last = { arr: last };
+      res = false;
+    }
+    else{
+      last = { max: last[0].max, min: last[0].min };
+      res = true;
+    }
+  }
+  
+  return three_cache[num] = { res: res, max: last.max, min: last.min, arr: last.arr };
+}
+
+
+var four_cache = {}
+//Удовлетворение 4 условию
+var four = function(num){
+  if (four_cache[num]) return four_cache[num];
+  
+  var res = false;
+  var last = [];
+  if ( second(num) ){
+    res = 0;
+    
+    sum(num).forEach(function(pair){
+      if ( three( pair.max*pair.min ).res ){
+        res++;
+        last.push( pair );
+      }
+    });
+    
+    if ( res != 1 ){
+      last = { arr: last };
+      res = false;
+    }
+    else{
+      last = { max: last[0].max, min: last[0].min };
+      res = true;
+    }
+  }
+  
+  return four_cache[num] = { res: res, max: last.max, min: last.min, arr: last.arr };
+}
+
+
+
+var all = function(num){
+  var res = [];
+  
+  for( var i=0; i < num; i++ ){
+    var c_res = four(i);
+    if ( c_res.res == true ) res.push({ max: c_res.max, min: c_res.min });
+  }
+  
+  return res;
+}
